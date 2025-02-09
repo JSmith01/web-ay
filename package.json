@@ -1,0 +1,12 @@
+{
+  "name": "web-ay-8912",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "author": "",
+  "type": "commonjs",
+  "main": "psg-player.js",
+  "scripts": {
+    "start": "npx serve . -p 3000"
+  }
+}

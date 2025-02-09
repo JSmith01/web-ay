@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AY-3-8912 PSG player demo</title>
+</head>
+<body>
+<h1>AY-3-8912 PSG player demo</h1>
+<p>
+    <label>.psg / .psg.gz file: <input type="file" id="file" name="file" accept=".psg,.gz"></label>
+    <button id="stop">Stop</button>
+</p>
+<p>Use <a target="_blank" href="https://github.com/ivanpirog/vortextracker">VortexTracker</a> to convert your favourite music to PSG.</p>
+<p>
+    <label>Demo tune: <select id="song">
+    <option value="BZYK-stracker.psg.gz">BZYK - SoundTracker demo song</option>
+    <option value="MmcM-Conversions.psg.gz">MmcM - Conversions</option>
+    <option value="MmcM-Fast_Creature.psg.gz">MmcM - Fast_Creature</option>
+</select></label>
+<button id="playExample">Play</button>
+</p>
+
+<script type="module">
+    import AyPsgPlayer from "./ay-psg-player.js";
+
+    const unpackGzip = buffer => new Response(new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+
+    const ctx = new AudioContext({ sampleRate: 48000 });
+    const player = new AyPsgPlayer(ctx);
+    player.ready.then(node => {
+        node.connect(ctx.destination);
+    })
+
+    async function playFile(file) {
+        let data = new Uint8Array(await file.arrayBuffer());
+        if (data[0] === 0x1f && data[1] === 0x8b) {
+            data = new Uint8Array(await unpackGzip(data));
+        }
+        player.passData(data);
+        await ctx.resume();
+        player.play();
+    }
+
+    document.getElementById('file').addEventListener('change', e => {
+        const [file] = e.target.files;
+        if (file) playFile(file);
+    });
+
+    document.getElementById('stop').addEventListener('click', () => {
+        player.stop();
+    });
+
+    document.getElementById('playExample').addEventListener('click', async () => {
+        const song = document.getElementById('song').value;
+        const response = await fetch('demo-tunes/' + song);
+        if (response.ok) {
+            playFile(response);
+        }
+    });
+</script>
+</body>
+</html>
